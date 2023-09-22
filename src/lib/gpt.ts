@@ -1,6 +1,6 @@
 import { ChatGPTAPI, ChatGPTError, type ChatMessage } from 'chatgpt';
-import { wait } from './async.js';
-import { required } from './utils.js';
+import { wait } from './async.ts';
+import { required } from './utils.ts';
 
 export async function sendMessageToGpt({
   text,
@@ -33,9 +33,7 @@ export async function sendMessageToGpt({
     if (error instanceof ChatGPTError && error.statusCode === 429) {
       if (maxTries === 1) {
         if (onBroken !== undefined) await onBroken();
-        throw new Error(
-          'Максимальное количество попыток отправить сообщение GPT достигнуто'
-        );
+        throw new Error('Максимальное количество попыток отправить сообщение GPT достигнуто');
       }
 
       if (onBusy !== undefined) await onBusy();

@@ -1,9 +1,9 @@
 import 'dotenv/config';
-import TelegramConnection from './lib/TelegramConnection.js';
-import { catchError } from './lib/async.js';
-import { isCommandForBot } from './lib/tgUtils.js';
-import message from './commands/message.js';
-import ping from './commands/ping.js';
+import TelegramConnection from './lib/TelegramConnection.ts';
+import { catchError } from './lib/async.ts';
+import { isCommandForBot } from './lib/tgUtils.ts';
+import message from './commands/message.ts';
+import ping from './commands/ping.ts';
 
 catchError(main());
 

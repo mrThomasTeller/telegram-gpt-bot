@@ -1,4 +1,4 @@
-import type TelegramConnection from '../lib/TelegramConnection.js';
+import type TelegramConnection from '../lib/TelegramConnection.ts';
 import type TelegramBot from 'node-telegram-bot-api';
 import packageJson from '../../package.json' assert { type: 'json' };
 

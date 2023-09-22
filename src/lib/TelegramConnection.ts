@@ -1,5 +1,5 @@
 import TelegramBot from 'node-telegram-bot-api';
-import { required } from './utils.js';
+import { required } from './utils.ts';
 
 class TelegramConnection {
   readonly bot: TelegramBot;

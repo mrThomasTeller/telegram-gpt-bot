@@ -1,5 +1,5 @@
-import { sendMessageToGpt } from '../lib/gpt.js';
-import type TelegramConnection from '../lib/TelegramConnection.js';
+import { sendMessageToGpt } from '../lib/gpt.ts';
+import type TelegramConnection from '../lib/TelegramConnection.ts';
 import type TelegramBot from 'node-telegram-bot-api';
 
 export default async function message(
@@ -16,10 +16,7 @@ export default async function message(
     const response = await sendMessageToGpt({
       text: msg.text ?? '',
       onBusy: async () => {
-        await bot.sendMessage(
-          chatId,
-          '😮‍💨 Бот усердно трудится, нужно немножко подождать'
-        );
+        await bot.sendMessage(chatId, '😮‍💨 Бот усердно трудится, нужно немножко подождать');
       },
       onBroken: async () => {
         await bot.sendMessage(
