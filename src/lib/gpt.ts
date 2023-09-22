@@ -2,30 +2,36 @@ import { ChatGPTAPI, ChatGPTError, type ChatMessage } from 'chatgpt';
 import { wait } from './async.ts';
 import { required } from './utils.ts';
 
+const api = new ChatGPTAPI({
+  apiKey: required(process.env.GPT_API_KEY),
+  completionParams: {
+    max_tokens: 2048,
+    model: 'gpt-4',
+  },
+});
+
 export async function sendMessageToGpt({
   text,
   maxTries = 5,
   retryTime = 25_000,
+  conversationId,
+  parentMessageId,
   onBusy,
   onBroken,
-  api = new ChatGPTAPI({
-    apiKey: required(process.env.GPT_API_KEY),
-    completionParams: {
-      max_tokens: 2048,
-      model: 'gpt-4',
-    },
-  }),
 }: {
   text: string;
   maxTries?: number;
   retryTime?: number;
+  conversationId?: string;
+  parentMessageId?: string;
   onBusy?: () => void | Promise<void>;
   onBroken?: () => void | Promise<void>;
-  api?: ChatGPTAPI;
 }): Promise<ChatMessage> {
   try {
     const result = await api.sendMessage(text, {
       completionParams: { max_tokens: 2048 },
+      conversationId,
+      parentMessageId,
     });
     return result;
   } catch (error) {
@@ -42,8 +48,9 @@ export async function sendMessageToGpt({
         text,
         onBusy,
         onBroken,
+        conversationId,
+        parentMessageId,
         maxTries: maxTries - 1,
-        api,
         retryTime,
       });
     }
