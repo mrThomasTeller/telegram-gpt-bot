@@ -25,7 +25,7 @@ async function main(): Promise<void> {
 
     const inWhiteList = whiteChatsList.includes(msg.chat.id);
 
-    if (await isCommandForBot(tg.bot, msg)) {
+    if (await isCommandForBot(msg)) {
       if (process.env.MODE === 'MAINTENANCE' || !inWhiteList) {
         await tg.bot.sendMessage(
           msg.chat.id,

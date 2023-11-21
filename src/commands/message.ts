@@ -1,6 +1,8 @@
+import logger from '../config/logger.ts';
 import { sendMessageToGpt } from '../lib/gpt.ts';
 import type TelegramConnection from '../lib/TelegramConnection.ts';
 import type TelegramBot from 'node-telegram-bot-api';
+import { getAuthorName } from '../lib/tgUtils.ts';
 
 const conversations = new Map<
   number,
@@ -50,6 +52,8 @@ export default async function message(
       gptConversationId: response.conversationId,
       gptParentMessageId: response.id,
     });
+
+    logger.info(`Query from ${getAuthorName(msg) ?? 'unknown'}`);
 
     await bot.sendMessage(chatId, response.text);
   } catch (error) {

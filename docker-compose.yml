@@ -5,3 +5,5 @@ services:
     build: .
     working_dir: /root/app
     container_name: gpt-tg-bot-app
+    volumes:
+      - ./logs:/root/app/logs
