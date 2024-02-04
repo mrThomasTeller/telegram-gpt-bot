@@ -29,7 +29,10 @@ export async function sendMessageToGpt({
 }): Promise<ChatMessage> {
   try {
     const result = await api.sendMessage(text, {
-      completionParams: { max_tokens: 2048 },
+      completionParams: {
+        max_tokens: 2048,
+        model: 'gpt-4-turbo-preview',
+      },
       conversationId,
       parentMessageId,
     });
