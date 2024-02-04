@@ -6,7 +6,7 @@ const api = new ChatGPTAPI({
   apiKey: required(process.env.GPT_API_KEY),
   completionParams: {
     max_tokens: 2048,
-    model: 'gpt-4',
+    model: 'gpt-4-turbo-preview',
   },
 });
 
@@ -39,7 +39,9 @@ export async function sendMessageToGpt({
     if (error instanceof ChatGPTError && error.statusCode === 429) {
       if (maxTries === 1) {
         if (onBroken !== undefined) await onBroken();
-        throw new Error('Максимальное количество попыток отправить сообщение GPT достигнуто');
+        throw new Error(
+          'Максимальное количество попыток отправить сообщение GPT достигнуто'
+        );
       }
 
       if (onBusy !== undefined) await onBusy();
