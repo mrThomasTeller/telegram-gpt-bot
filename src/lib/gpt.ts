@@ -1,14 +1,21 @@
-import { ChatGPTAPI, ChatGPTError, type ChatMessage } from "chatgpt";
+import OpenAI from "openai";
 import { wait } from "./async.ts";
 import { required } from "./utils.ts";
 
-const api = new ChatGPTAPI({
+const openai = new OpenAI({
   apiKey: required(process.env.GPT_API_KEY),
-  completionParams: {
-    // max_tokens: 2048,
-    model: required(process.env.GPT_MODEL),
-  },
 });
+
+type ChatMessage = {
+  id: string;
+  text: string;
+  conversationId?: string;
+};
+
+const conversations = new Map<
+  string,
+  OpenAI.Chat.ChatCompletionMessageParam[]
+>();
 
 export async function sendMessageToGpt({
   text,
@@ -28,18 +35,45 @@ export async function sendMessageToGpt({
   onBroken?: () => void | Promise<void>;
 }): Promise<ChatMessage> {
   try {
-    const result = await api.sendMessage(text, {
-      completionParams: {
-        // max_tokens: 2048,
-        model: required(process.env.GPT_MODEL),
-      },
-      conversationId,
-      parentMessageId,
+    const conversationKey = conversationId ?? crypto.randomUUID();
+
+    const messages = conversations.get(conversationKey) ?? [];
+
+    if (messages.length === 0) {
+      messages.push({
+        role: "system",
+        content: "You are a helpful assistant.",
+      });
+    }
+
+    messages.push({ role: "user", content: text });
+
+    const completion = await openai.chat.completions.create({
+      messages,
+      model: required(process.env.GPT_MODEL),
     });
-    return result;
-  } catch (error) {
-    // Too Many Requests - ждём 25 секунд
-    if (error instanceof ChatGPTError && error.statusCode === 429) {
+
+    const assistantMessage = completion.choices[0]?.message;
+
+    if (assistantMessage?.content === undefined || assistantMessage.content === null || assistantMessage.content === '') {
+      throw new Error("No response from OpenAI");
+    }
+
+    messages.push(assistantMessage);
+    conversations.set(conversationKey, messages);
+
+    return {
+      id: completion.id,
+      text: assistantMessage.content,
+      conversationId: conversationKey,
+    };
+  } catch (error: unknown) {
+    const isRateLimitError = error !== null && 
+      typeof error === 'object' && 
+      'status' in error && 
+      (error as any).status === 429;
+    
+    if (isRateLimitError) {
       if (maxTries === 1) {
         if (onBroken !== undefined) await onBroken();
         throw new Error(
@@ -62,3 +96,4 @@ export async function sendMessageToGpt({
     throw error;
   }
 }
+
