@@ -1,17 +1,19 @@
-FROM node:18-slim
-RUN apt-get update -y && apt-get install -y openssl
-ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
-RUN npm install -g pm2@^5.3.0
+# Building
+FROM node:20-slim
+RUN apt-get update -y
+RUN apt-get install -y openssl
+RUN apt-get install -y curl
+RUN apt-get install -y unzip
+RUN curl -fsSL https://bun.sh/install | bash -s "bun-v1.2.1"
+ENV PATH="/root/.bun/bin:${PATH}"
 
 WORKDIR /root/app
 
 COPY package.json .
-COPY pnpm-lock.yaml .
+COPY bun.lock .
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm prod:install
+RUN bun install --prod --frozen-lockfile
 
 COPY . .
 
-CMD pnpm server:start
+CMD bun start

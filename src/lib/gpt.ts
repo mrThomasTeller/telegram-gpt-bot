@@ -1,12 +1,12 @@
-import { ChatGPTAPI, ChatGPTError, type ChatMessage } from 'chatgpt';
-import { wait } from './async.ts';
-import { required } from './utils.ts';
+import { ChatGPTAPI, ChatGPTError, type ChatMessage } from "chatgpt";
+import { wait } from "./async.ts";
+import { required } from "./utils.ts";
 
 const api = new ChatGPTAPI({
   apiKey: required(process.env.GPT_API_KEY),
   completionParams: {
-    max_tokens: 2048,
-    model: 'gpt-4-turbo-preview',
+    // max_tokens: 2048,
+    model: required(process.env.GPT_MODEL),
   },
 });
 
@@ -30,8 +30,8 @@ export async function sendMessageToGpt({
   try {
     const result = await api.sendMessage(text, {
       completionParams: {
-        max_tokens: 2048,
-        model: 'gpt-4-turbo-preview',
+        // max_tokens: 2048,
+        model: required(process.env.GPT_MODEL),
       },
       conversationId,
       parentMessageId,
@@ -43,7 +43,7 @@ export async function sendMessageToGpt({
       if (maxTries === 1) {
         if (onBroken !== undefined) await onBroken();
         throw new Error(
-          'Максимальное количество попыток отправить сообщение GPT достигнуто'
+          "Максимальное количество попыток отправить сообщение GPT достигнуто"
         );
       }
 
