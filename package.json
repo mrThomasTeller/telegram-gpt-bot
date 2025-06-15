@@ -13,7 +13,7 @@
     "check:ts": "tsc --noEmit",
     "check:verify": "bun check:ts && bun check:lint",
     "dev:format": "prettier --write src",
-    "dev:watch": "nodemon -x 'bun src/bot-server.ts' --ext ts,js,json,jsx",
+    "dev:watch": "nodemon -x 'bun src/bot-server.ts' --ext ts,js,json,jsx,env",
     "prod:install": "bun install --prod --frozen-lockfile",
     "git:commit": "git add -A && git commit && git push",
     "git:fcommit": "git add -A && git commit --no-verify && git push",

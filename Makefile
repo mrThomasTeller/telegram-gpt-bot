@@ -12,6 +12,9 @@ stop:
 bash:
 	docker exec -it gpt-tg-bot-app bash
 
+log:
+	docker compose logs -f --timestamps
+
 prepare:
 	docker || (curl -fsSL https://get.docker.com | sh)
 

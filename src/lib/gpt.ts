@@ -60,10 +60,17 @@ export async function sendMessageToGpt({
 
       for await (const chunk of stream) {
         const content = chunk.choices[0]?.delta?.content;
-        if (content !== undefined && content !== null && content !== '') {
+        
+        // Обрабатываем контент, даже если это пустая строка (но не null/undefined)
+        if (content !== undefined && content !== null) {
           fullContent += content;
-          await onChunk(content);
+          
+          // Вызываем onChunk только для непустого контента
+          if (content !== '') {
+            await onChunk(content);
+          }
         }
+        
         if (chunk.id !== undefined && chunk.id !== '') {
           messageId = chunk.id;
         }

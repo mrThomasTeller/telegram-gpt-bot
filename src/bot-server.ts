@@ -9,7 +9,8 @@ catchError(main());
 
 const whiteChatsList = (process.env.WHITE_CHATS_LIST ?? '')
   .split(',')
-  .map((id) => parseInt(id, 10));
+  .map((item) => item.trim())
+  .filter((item) => item.length > 0);
 
 async function main(): Promise<void> {
   const tg = new TelegramConnection();
@@ -23,10 +24,26 @@ async function main(): Promise<void> {
   tg.bot.onText(/.*/, async (msg) => {
     if (msg.text == null) return;
 
-    const inWhiteList = whiteChatsList.includes(msg.chat.id);
+    const inWhiteList = whiteChatsList.some((item) => {
+      // Проверяем ID чата
+      if (!isNaN(Number(item)) && Number(item) === msg.chat.id) {
+        return true;
+      }
+      // Проверяем username пользователя (без @)
+      const username = msg.from?.username;
+      if (username != null && (item === username || item === `@${username}`)) {
+        return true;
+      }
+      return false;
+    });
 
     if (await isCommandForBot(msg)) {
-      if (process.env.MODE === 'MAINTENANCE' || !inWhiteList) {
+      if (!inWhiteList) {
+        await tg.bot.sendMessage(
+          msg.chat.id,
+          '🚫 Бот недоступен для вашего аккаунта. Попросите администратора добавить вас в список разрешенных.'
+        );
+      } else if (process.env.MODE === 'MAINTENANCE') {
         await tg.bot.sendMessage(
           msg.chat.id,
           '😴 Бот временно отключен для технического обслуживания. Пожалуйста, попробуйте позже.'

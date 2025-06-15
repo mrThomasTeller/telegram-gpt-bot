@@ -89,16 +89,14 @@ export default async function message(
     });
 
     // Финальное обновление сообщения с полным текстом
-    if (accumulatedText !== response.text) {
-      try {
-        await bot.editMessageText(response.text, {
-          chat_id: chatId,
-          message_id: thinkingMessageId,
-        });
-      } catch (editError) {
-        // Если не удалось отредактировать, отправим новое сообщение
-        await bot.sendMessage(chatId, response.text);
-      }
+    try {
+      await bot.editMessageText(response.text, {
+        chat_id: chatId,
+        message_id: thinkingMessageId,
+      });
+    } catch (editError) {
+      // Если не удалось отредактировать, отправим новое сообщение
+      await bot.sendMessage(chatId, response.text);
     }
 
     conversations.set(chatId, {
