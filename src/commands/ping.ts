@@ -1,6 +1,6 @@
-import type TelegramConnection from "../lib/TelegramConnection.ts";
-import type TelegramBot from "node-telegram-bot-api";
-import packageJson from "../../package.json" assert { type: "json" };
+import type TelegramConnection from '../lib/TelegramConnection.ts';
+import type TelegramBot from 'node-telegram-bot-api';
+import packageJson from '../../package.json' assert { type: 'json' };
 
 export default async function ping(
   telegramConnection: TelegramConnection,
@@ -10,7 +10,7 @@ export default async function ping(
     msg.chat.id,
     `
 💻 Бот тут
-Environment: ${process.env.NODE_ENV ?? "unknown"}
+Environment: ${process.env.NODE_ENV ?? 'unknown'}
 Version: ${packageJson.version}
 `.trim()
   );

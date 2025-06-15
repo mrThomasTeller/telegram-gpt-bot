@@ -12,6 +12,7 @@
     "check:lint": "eslint src",
     "check:ts": "tsc --noEmit",
     "check:verify": "bun check:ts && bun check:lint",
+    "dev:format": "prettier --write src",
     "dev:watch": "nodemon -x 'bun src/bot-server.ts' --ext ts,js,json,jsx",
     "prod:install": "bun install --prod --frozen-lockfile",
     "git:commit": "git add -A && git commit && git push",
@@ -31,6 +32,7 @@
     "lodash": "^4.17.21",
     "node-telegram-bot-api": "^0.61.0",
     "openai": "^5.3.0",
+    "prettier": "^3.5.3",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
     "winston": "^3.11.0"

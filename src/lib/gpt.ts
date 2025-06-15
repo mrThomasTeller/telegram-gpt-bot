@@ -1,6 +1,6 @@
-import OpenAI from "openai";
-import { wait } from "./async.ts";
-import { required } from "./utils.ts";
+import OpenAI from 'openai';
+import { wait } from './async.ts';
+import { required } from './utils.ts';
 
 const openai = new OpenAI({
   apiKey: required(process.env.GPT_API_KEY),
@@ -12,10 +12,7 @@ type ChatMessage = {
   conversationId?: string;
 };
 
-const conversations = new Map<
-  string,
-  OpenAI.Chat.ChatCompletionMessageParam[]
->();
+const conversations = new Map<string, OpenAI.Chat.ChatCompletionMessageParam[]>();
 
 export async function sendMessageToGpt({
   text,
@@ -25,6 +22,7 @@ export async function sendMessageToGpt({
   parentMessageId,
   onBusy,
   onBroken,
+  onChunk,
 }: {
   text: string;
   maxTries?: number;
@@ -33,6 +31,7 @@ export async function sendMessageToGpt({
   parentMessageId?: string;
   onBusy?: () => void | Promise<void>;
   onBroken?: () => void | Promise<void>;
+  onChunk?: (chunk: string) => void | Promise<void>;
 }): Promise<ChatMessage> {
   try {
     const conversationKey = conversationId ?? crypto.randomUUID();
@@ -41,44 +40,89 @@ export async function sendMessageToGpt({
 
     if (messages.length === 0) {
       messages.push({
-        role: "system",
-        content: "You are a helpful assistant.",
+        role: 'system',
+        content: 'You are a helpful assistant.',
       });
     }
 
-    messages.push({ role: "user", content: text });
+    messages.push({ role: 'user', content: text });
 
-    const completion = await openai.chat.completions.create({
-      messages,
-      model: required(process.env.GPT_MODEL),
-    });
+    if (onChunk !== undefined) {
+      // Стриминг режим
+      const stream = await openai.chat.completions.create({
+        messages,
+        model: required(process.env.GPT_MODEL),
+        stream: true,
+      });
 
-    const assistantMessage = completion.choices[0]?.message;
+      let fullContent = '';
+      let messageId = '';
 
-    if (assistantMessage?.content === undefined || assistantMessage.content === null || assistantMessage.content === '') {
-      throw new Error("No response from OpenAI");
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content;
+        if (content !== undefined && content !== null && content !== '') {
+          fullContent += content;
+          await onChunk(content);
+        }
+        if (chunk.id !== undefined && chunk.id !== '') {
+          messageId = chunk.id;
+        }
+      }
+
+      if (fullContent === '') {
+        throw new Error('No response from OpenAI');
+      }
+
+      const assistantMessage: OpenAI.Chat.ChatCompletionMessageParam = {
+        role: 'assistant',
+        content: fullContent,
+      };
+
+      messages.push(assistantMessage);
+      conversations.set(conversationKey, messages);
+
+      return {
+        id: messageId,
+        text: fullContent,
+        conversationId: conversationKey,
+      };
+    } else {
+      // Обычный режим без стриминга
+      const completion = await openai.chat.completions.create({
+        messages,
+        model: required(process.env.GPT_MODEL),
+      });
+
+      const assistantMessage = completion.choices[0]?.message;
+
+      if (
+        assistantMessage?.content === undefined ||
+        assistantMessage.content === null ||
+        assistantMessage.content === ''
+      ) {
+        throw new Error('No response from OpenAI');
+      }
+
+      messages.push(assistantMessage);
+      conversations.set(conversationKey, messages);
+
+      return {
+        id: completion.id,
+        text: assistantMessage.content,
+        conversationId: conversationKey,
+      };
     }
-
-    messages.push(assistantMessage);
-    conversations.set(conversationKey, messages);
-
-    return {
-      id: completion.id,
-      text: assistantMessage.content,
-      conversationId: conversationKey,
-    };
   } catch (error: unknown) {
-    const isRateLimitError = error !== null && 
-      typeof error === 'object' && 
-      'status' in error && 
+    const isRateLimitError =
+      error !== null &&
+      typeof error === 'object' &&
+      'status' in error &&
       (error as any).status === 429;
-    
+
     if (isRateLimitError) {
       if (maxTries === 1) {
         if (onBroken !== undefined) await onBroken();
-        throw new Error(
-          "Максимальное количество попыток отправить сообщение GPT достигнуто"
-        );
+        throw new Error('Максимальное количество попыток отправить сообщение GPT достигнуто');
       }
 
       if (onBusy !== undefined) await onBusy();
@@ -87,6 +131,7 @@ export async function sendMessageToGpt({
         text,
         onBusy,
         onBroken,
+        onChunk,
         conversationId,
         parentMessageId,
         maxTries: maxTries - 1,
@@ -96,4 +141,3 @@ export async function sendMessageToGpt({
     throw error;
   }
 }
-

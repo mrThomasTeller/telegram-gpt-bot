@@ -16,8 +16,8 @@ async function main(): Promise<void> {
   // const store = new Store();
 
   await tg.bot.setMyCommands([
-    { command: 'ping', description: 'Проверить работоспособность бота' },
     { command: 'new_topic', description: 'Начать новую тему' },
+    { command: 'ping', description: 'Проверить работоспособность бота' },
   ]);
 
   tg.bot.onText(/.*/, async (msg) => {
